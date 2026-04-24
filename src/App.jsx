@@ -11,9 +11,7 @@ import {
   registerUser,
   revokeAdmin,
 } from "./api";
-
-const logoUrl =
-  "https://drive.google.com/thumbnail?id=1Kh_--f9wSeXyBB-hrf6y6nPQUzYsREgY&sz=w300";
+import logoUrl from "./assets/image.png";
 
 const blankRegister = {
   firstName: "",
@@ -49,6 +47,14 @@ function formatError(error) {
   if (!error) return "Something went wrong. Please try again.";
   if (typeof error === "string") return error;
   return error.message || "Something went wrong. Please try again.";
+}
+
+function formatBackendMessage(message, actionLabel = "this action") {
+  if (message === "Invalid action.") {
+    return `The backend is connected, but it does not route ${actionLabel} yet. Update doPost in Apps Script and redeploy.`;
+  }
+
+  return message;
 }
 
 function formatPhone(value) {
@@ -144,7 +150,10 @@ function ChartCard({ title, data = {}, type = "bar" }) {
 
   return (
     <div className="chart-card">
-      <strong>{title}</strong>
+      <div className="chart-card-header">
+        <strong>{title}</strong>
+        <span>{total} total</span>
+      </div>
       {entries.length ? (
         type === "bar" ? (
           <div className="bar-chart">
@@ -353,7 +362,10 @@ export default function App() {
         setScreen("adminPanel");
         await loadStats();
       } else {
-        setMessage("adminLoginResult", res?.message || "Sign in failed.");
+        setMessage(
+          "adminLoginResult",
+          formatBackendMessage(res?.message, "admin sign in") || "Sign in failed.",
+        );
       }
     } catch (error) {
       setMessage("adminLoginResult", formatError(error));
@@ -377,7 +389,10 @@ export default function App() {
         setMessage("searchUserResult", `Found ${res.users.length} user(s).`, "success");
         setSearchData(formatUsers(res.users));
       } else {
-        setMessage("searchUserResult", res?.message || "No user found.");
+        setMessage(
+          "searchUserResult",
+          formatBackendMessage(res?.message, "admin user search") || "No user found.",
+        );
       }
     } catch (error) {
       setMessage("searchUserResult", formatError(error));
@@ -407,7 +422,10 @@ export default function App() {
         setAdminForm(blankAdminForm);
         await loadStats();
       } else {
-        setMessage("registerAdminResult", res?.message || "Admin registration failed.");
+        setMessage(
+          "registerAdminResult",
+          formatBackendMessage(res?.message, "admin registration") || "Admin registration failed.",
+        );
       }
     } catch (error) {
       setMessage("registerAdminResult", formatError(error));
@@ -431,7 +449,10 @@ export default function App() {
         setMessage("recoverAdminResult", `Found ${res.admins.length} admin record(s).`, "success");
         setRecoverAdminData(formatAdmins(res.admins));
       } else {
-        setMessage("recoverAdminResult", res?.message || "No admin found.");
+        setMessage(
+          "recoverAdminResult",
+          formatBackendMessage(res?.message, "admin credential recovery") || "No admin found.",
+        );
       }
     } catch (error) {
       setMessage("recoverAdminResult", formatError(error));
@@ -455,7 +476,10 @@ export default function App() {
         setRevokeForm((current) => ({ ...current, staffId: "" }));
         await loadStats();
       } else {
-        setMessage("revokeAdminResult", res?.message || "Could not revoke admin.");
+        setMessage(
+          "revokeAdminResult",
+          formatBackendMessage(res?.message, "admin revocation") || "Could not revoke admin.",
+        );
       }
     } catch (error) {
       setMessage("revokeAdminResult", formatError(error));
@@ -465,7 +489,7 @@ export default function App() {
   };
 
   return (
-    <div className="app">
+    <div className={`app app-${screen}`}>
       {screens.map((id) => (
         <div
           aria-hidden={screen !== id}
@@ -475,10 +499,12 @@ export default function App() {
         >
           {id === "home" && (
             <div className="screen-content">
-              <div className="badge">Community Support</div>
-              <img src={logoUrl} alt="COP Food Rescue Logo" className="home-logo" />
-              <h1>COP Food Rescue</h1>
-              <p className="subtitle">Register, check in, or recover your ID to get started.</p>
+              <div className="home-intro">
+                <div className="badge">Community Support</div>
+                <img src={logoUrl} alt="COP Food Rescue Logo" className="home-logo" />
+                <h1>COP Food Rescue</h1>
+                <p className="subtitle">Register, check in, or recover your ID to get started.</p>
+              </div>
               <div className="home-actions">
                 <button type="button" className="btn-primary" onClick={() => showScreen("register")}>
                   Register New Account
@@ -803,38 +829,52 @@ export default function App() {
               <BackHeader title="Admin Panel" onBack={goHome} />
               <div className="screen-content">
                 <div className="admin-shell">
-                  <section className="admin-section">
+                  <section className="admin-section admin-overview-section">
                     <div className="admin-section-header">
-                      <h3>Overview</h3>
-                      <p>Quick summary of users, activity, and visits.</p>
+                      <div>
+                        <span className="section-kicker">Dashboard</span>
+                        <h3>Overview</h3>
+                        <p>Quick summary of users, activity, and visits.</p>
+                      </div>
                     </div>
                     <div className="admin-stats-grid">
                       <div className="admin-stat-box">
+                        <div className="stat-visual">U</div>
                         <div className="admin-stat-label">Total Users</div>
                         <div className="admin-stat-value">{stats?.totalUsers ?? "-"}</div>
                       </div>
                       <div className="admin-stat-box">
+                        <div className="stat-visual">A</div>
                         <div className="admin-stat-label">Active Users</div>
                         <div className="admin-stat-value">{stats?.activeUsers ?? "-"}</div>
                       </div>
                       <div className="admin-stat-box">
+                        <div className="stat-visual">V</div>
                         <div className="admin-stat-label">Total Visits</div>
                         <div className="admin-stat-value">{stats?.totalVisits ?? "-"}</div>
                       </div>
                     </div>
                   </section>
 
-                  <section className="admin-section">
+                  <section className="admin-section admin-actions-section">
                     <div className="admin-section-header">
-                      <h3>Admin Actions</h3>
-                      <p>Search users, manage admins, recover details, and revoke access.</p>
+                      <div>
+                        <span className="section-kicker">Tools</span>
+                        <h3>Admin Actions</h3>
+                        <p>Search users, manage admins, recover details, and revoke access.</p>
+                      </div>
                     </div>
                     <div className="admin-grid">
                       <div className="admin-card">
-                        <h3>Search User by Name</h3>
-                        <p className="admin-card-text">
-                          Find a registered user and view contact and demographic details.
-                        </p>
+                        <div className="admin-card-heading">
+                          <div className="card-visual">S</div>
+                          <div>
+                            <h3>Search User by Name</h3>
+                            <p className="admin-card-text">
+                              Find a registered user and view contact and demographic details.
+                            </p>
+                          </div>
+                        </div>
                         <div className="form-group">
                           <Field id="searchUserName" label="Full Name or Part of Name">
                             <input
@@ -858,8 +898,13 @@ export default function App() {
                       </div>
 
                       <div className="admin-card">
-                        <h3>Register Admin</h3>
-                        <p className="admin-card-text">Create a new admin or staff account.</p>
+                        <div className="admin-card-heading">
+                          <div className="card-visual">+</div>
+                          <div>
+                            <h3>Register Admin</h3>
+                            <p className="admin-card-text">Create a new admin or staff account.</p>
+                          </div>
+                        </div>
                         <div className="form-group">
                           <div className="row-two">
                             <Field id="adminFullName" label="Full Name">
@@ -947,10 +992,15 @@ export default function App() {
                       </div>
 
                       <div className="admin-card">
-                        <h3>Recover Admin Credentials</h3>
-                        <p className="admin-card-text">
-                          Search for admin records by name and retrieve details.
-                        </p>
+                        <div className="admin-card-heading">
+                          <div className="card-visual">R</div>
+                          <div>
+                            <h3>Recover Admin Credentials</h3>
+                            <p className="admin-card-text">
+                              Search for admin records by name and retrieve details.
+                            </p>
+                          </div>
+                        </div>
                         <div className="form-group">
                           <Field id="recoverAdminName" label="Admin Name">
                             <input
@@ -974,8 +1024,13 @@ export default function App() {
                       </div>
 
                       <div className="admin-card">
-                        <h3>Revoke Admin Access</h3>
-                        <p className="admin-card-text">Change an admin account status to revoked.</p>
+                        <div className="admin-card-heading">
+                          <div className="card-visual danger">!</div>
+                          <div>
+                            <h3>Revoke Admin Access</h3>
+                            <p className="admin-card-text">Change an admin account status to revoked.</p>
+                          </div>
+                        </div>
                         <div className="form-group">
                           <div className="row-two">
                             <Field id="revokeStaffId" label="Staff ID">
@@ -1019,10 +1074,13 @@ export default function App() {
                     </div>
                   </section>
 
-                  <section className="admin-section">
+                  <section className="admin-section admin-analytics-section">
                     <div className="admin-section-header">
-                      <h3>Analytics</h3>
-                      <p>Breakdowns across demographics, preferences, and account status.</p>
+                      <div>
+                        <span className="section-kicker">Insights</span>
+                        <h3>Analytics</h3>
+                        <p>Breakdowns across demographics, preferences, and account status.</p>
+                      </div>
                     </div>
                     <Message message={messages.statsResult} />
                     <div className="chart-grid">
